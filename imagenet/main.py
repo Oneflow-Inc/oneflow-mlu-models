@@ -192,6 +192,7 @@ def main_worker(gpu, ngpus_per_node, args):
         # device = oneflow.device("cpu")
         device = oneflow.device("mlu")
     
+    model = model.to(device)
     
     if args.distributed:
         model = oneflow.nn.parallel.DistributedDataParallel(model)
@@ -260,7 +261,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     if args.distributed:
         train_sampler = oneflow.utils.data.distributed.DistributedSampler(train_dataset)
-        val_sampler = oneflow.utils.data.distributed.DistributedSampler(val_dataset, shuffle=False, drop_last=True)
+        val_sampler = oneflow.utils.data.distributed.DistributedSampler(val_dataset, shuffle=False, drop_last=False)
     else:
         train_sampler = None
         val_sampler = None
@@ -271,11 +272,10 @@ def main_worker(gpu, ngpus_per_node, args):
 
     val_loader = oneflow.utils.data.DataLoader(
         val_dataset, batch_size=args.batch_size, shuffle=False,
-        # num_workers=args.workers, pin_memory=True, sampler=val_sampler)
-        num_workers=args.workers, pin_memory=True, sampler=None)
+        num_workers=args.workers, pin_memory=True, sampler=val_sampler)
 
     if args.evaluate:
-        validate(val_loader, model, criterion, device.type + ":0", args)
+        validate(val_loader, model, criterion, device, args)
         return
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -286,7 +286,7 @@ def main_worker(gpu, ngpus_per_node, args):
         train(train_loader, model, criterion, optimizer, epoch, device, args)
 
         # evaluate on validation set
-        acc1 = validate(val_loader, model, criterion, device.type + ":0", args)
+        acc1 = validate(val_loader, model, criterion, device, args)
         
         scheduler.step()
         
@@ -319,7 +319,6 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
 
     # switch to train mode
     model.train()
-    model = model.to(device)
 
     end = time.time()
     for i, (images, target) in enumerate(train_loader):
@@ -327,8 +326,6 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
         data_time.update(time.time() - end)
 
         # move data to the same device as model
-        # images = images.to(device, non_blocking=True)
-        # target = target.to(device, non_blocking=True)
         images = images.to(device)
         target = target.to(device)
 
@@ -356,8 +353,6 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
 
 
 def validate(val_loader, model, criterion, device, args):
-    if oneflow.env.get_rank() > 0:
-        return
 
     def run_validate(loader, base_progress=0):
         with oneflow.no_grad():
@@ -403,13 +398,14 @@ def validate(val_loader, model, criterion, device, args):
 
     # switch to evaluate mode
     model.eval()
-    model = model.to(device)
 
     run_validate(val_loader)
-    # if args.distributed:
-    #     top1.all_reduce()
-    #     top5.all_reduce()
+    if args.distributed:
+        top1.all_reduce()
+        top5.all_reduce()
 
+
+    args.world_size = oneflow.env.get_world_size()
     if args.distributed and (len(val_loader.sampler) * args.world_size < len(val_loader.dataset)):
         aux_val_dataset = Subset(val_loader.dataset,
                                  range(len(val_loader.sampler) * args.world_size, len(val_loader.dataset)))
