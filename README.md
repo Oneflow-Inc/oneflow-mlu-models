@@ -11,7 +11,7 @@
 ### 推理步骤如下
 
 ```shell
-git clone git@github.com:Oneflow-Inc/oneflow-cambricon-models.git
+git clone --recursive git@github.com:Oneflow-Inc/oneflow-cambricon-models.git
 cd oneflow-cambricon-models/libai
 pip install pybind11
 pip install -e .
