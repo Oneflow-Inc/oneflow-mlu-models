@@ -1,0 +1,4 @@
+[submodule "libai"]
+	path = libai
+	url = https://github.com/Oneflow-Inc/libai
+	branch = cambricon_support_gpt2
