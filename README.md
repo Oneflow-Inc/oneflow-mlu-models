@@ -2,11 +2,11 @@
 
 ### resnet50-imagenet
 
-在 MLU 270 上使用resnet50训练和推理imagenet，详细操作步骤见[这里](resnet50-imagenet/README.md)
+在 MLU 370 上使用resnet50训练和推理imagenet，详细操作步骤见[这里](resnet50-imagenet/README.md)
 
 ### libai-gpt2
 
-在 MLU 270 上使用 GPT2 微调以及推理 StableDiffusion 的咒语。
+在 MLU 370 上使用 GPT2 微调以及推理 StableDiffusion 的咒语。
 
 ### 推理步骤如下
 
