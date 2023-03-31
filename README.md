@@ -17,13 +17,7 @@ pip install pybind11
 pip install -e .
 ```
 
-libai的gpt2推理实现是在projects/MagicPrompt文件夹中，这个Magicprompt是我们自己用gpt2预训练后做推理的项目，用于将一个简单的句子转换成stable diffusion的咒语。接下来，我将详细展示跑GPT2推理的步骤：
-
-接着，新建一个文件夹，并把 https://huggingface.co/Gustavosta/MagicPrompt-Stable-Diffusion/tree/main 下的4个画红色框的文件下载到这个文件夹中，假设这个文件夹路径为`/home/zhangxiaoyu/onefow_gpt2_model`
-
-<img width="392" alt="图片" src="https://user-images.githubusercontent.com/35585791/226298362-1fc67e84-d403-41a9-b107-a53a608345e5.png">
-
-接着，我们修改 libai/projects/MagicPrompt/configs/gpt2_inference.py 中 `/data/home/magicprompt` 为 `/home/zhangxiaoyu/onefow_gpt2_model` ，同时修改 `libai/projects/MagicPrompt/pipeline.py` 中的第99行为`model_path="/home/zhangxiaoyu/onefow_gpt2_model"`。然后我们需要从https://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/libai/magicprompt/OneFlow-MagicPrompt-Stable_Diffusion.zip 这里下载模型解压到`/home/zhangxiaoyu/onefow_gpt2_model`文件夹中，这样我们就可以跑起来gpt2生成咒语的推理脚本了。
+libai的gpt2推理实现是在projects/MagicPrompt文件夹中，这个Magicprompt是我们自己用gpt2预训练后做推理的项目，用于将一个简单的句子转换成stable diffusion的咒语。接着把从 `https://oneflow-static.oss-cn-beijing.aliyuncs.com/oneflow-model.zip` 这里下载的模型解压到任意路径，并在 libai/ 下全局搜索`/data/home/magicprompt`将其替换为解压后的模型路径，我们就可以跑起来gpt2生成咒语的推理脚本了。
 
 单卡模式运行命令如下：
 
@@ -52,7 +46,7 @@ python3 -m oneflow.distributed.launch --nproc_per_node 4 projects/MagicPrompt/pi
 bash tools/train.sh tools/train_net.py projects/MagicPrompt/configs/gpt2_training.py 1
 ```
 
-如果要训练多卡的数据，则只需要调整 `libai/projects/MagicPrompt/configs/gpt2_training.py` 第67行的dist即可，比如数据并行可以将其调整为：
+如果要训练多卡的数据，则只需要调整 `libai/projects/MagicPrompt/configs/gpt2_training.py` 第67行的dist即可，比如4卡的数据并行可以将其调整为：
 
 ```shell
 dist=dict(
@@ -63,4 +57,10 @@ dist=dict(
             # custom_pipeline_stage_id = [0] * 6 + [1] * 6,
             # pipeline_num_layers=model.cfg.hidden_layers,
         ),
+```
+
+然后使用如下的命令进行训练：
+
+```shell
+bash tools/train.sh tools/train_net.py projects/MagicPrompt/configs/gpt2_training.py 4
 ```
