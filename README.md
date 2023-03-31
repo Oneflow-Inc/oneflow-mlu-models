@@ -11,7 +11,7 @@
 ### 推理步骤如下
 
 ```shell
-git clone --recursive git@github.com:Oneflow-Inc/oneflow-cambricon-models.git
+git clone --recursive https://github.com/Oneflow-Inc/oneflow-cambricon-models.git
 cd oneflow-cambricon-models/libai
 pip install pybind11
 pip install -e .
@@ -23,7 +23,7 @@ libai的gpt2推理实现是在projects/MagicPrompt文件夹中，这个Magicprom
 
 <img width="392" alt="图片" src="https://user-images.githubusercontent.com/35585791/226298362-1fc67e84-d403-41a9-b107-a53a608345e5.png">
 
-接着，我们修改 libai/projects/MagicPrompt/configs/gpt2_inference.py 中 `/data/home/magicprompt` 为 `/home/zhangxiaoyu/onefow_gpt2_model` ，同时修改 `libai/projects/MagicPrompt/pipeline.py` 中的第99行为`model_path="/home/zhangxiaoyu/onefow_gpt2_model"`，并且把100行改成`mode="huggingface"`，这样我们就可以跑起来gpt2生成咒语的推理脚本了。
+接着，我们修改 libai/projects/MagicPrompt/configs/gpt2_inference.py 中 `/data/home/magicprompt` 为 `/home/zhangxiaoyu/onefow_gpt2_model` ，同时修改 `libai/projects/MagicPrompt/pipeline.py` 中的第99行为`model_path="/home/zhangxiaoyu/onefow_gpt2_model"`。然后我们需要从https://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/libai/magicprompt/OneFlow-MagicPrompt-Stable_Diffusion.zip 这里下载模型解压到`/home/zhangxiaoyu/onefow_gpt2_model`文件夹中，这样我们就可以跑起来gpt2生成咒语的推理脚本了。
 
 单卡模式运行命令如下：
 
@@ -44,9 +44,6 @@ pipeline_num_layers=12,
 """
 python3 -m oneflow.distributed.launch --nproc_per_node 4 projects/MagicPrompt/pipeline.py
 ```
-
-注意，在寒武纪上我们需要额外修改`libai/libai/utils/distributed.py`的第74行为`self._device_type = try_get_key(cfg, "device_type", default="mlu")`。并且这个机器上不能加载PyTorch的模型，我们必须加载oneflow格式的模型，所以我们需要从https://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/libai/magicprompt/OneFlow-MagicPrompt-Stable_Diffusion.zip 这里下载模型解压到`/home/zhangxiaoyu/onefow_gpt2_model`文件夹中并把100行改成`mode="libai"`，其它步骤和上述一致。
-
 ### 微调步骤如下
 
 训练只需要下载数据集 (`wget http://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/libai/magicprompt/magicprompt.zip`) 并且修改下`projects/MagicPrompt/configs/gpt2_training.py`第13到15行的路径就可以了。然后执行下面的命令进行单卡的训练：
