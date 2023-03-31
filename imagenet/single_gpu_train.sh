@@ -1,1 +1,1 @@
-python3 main.py -a resnet18
+python3 main.py -a resnet50 -b 128
