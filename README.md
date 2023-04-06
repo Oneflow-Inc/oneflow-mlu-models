@@ -2,7 +2,57 @@
 
 ### resnet50-imagenet
 
-在 MLU 370 上使用resnet50训练和推理imagenet，详细操作步骤见[这里](resnet50-imagenet/README.md)
+在 MLU 370 上使用resnet50训练和推理imagenet，详细文档见[这里](resnet50-imagenet/README.md)
+
+### 数据集准备
+
+把 imagenet 数据集放在 oneflow-cambricon-models/ 下即可。
+
+### 训练
+
+训练默认使用 imagenet 数据集，和 ResNet18 网络。
+
+单卡训练
+```shell
+python3 main.py
+```
+
+多卡 DDP 训练
+
+```shell
+python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessing-distributed
+```
+
+### 推理
+
+推理只需要在训练命令的基础上加上 `-e` 选项即可
+
+单卡推理
+```
+python3 main.py -e
+```
+多卡 DDP 推理
+```
+python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessing-distributed -e
+```
+
+### 其他选项
+- 如果需要更改网络，可以使用 `-a` 选项。例如要训练 ResNet50，则可以运行如下命令。可以支持 flowvision.models 中的网络。
+```
+python3 main.py -a resnet50
+```
+
+- 如果 imagenet 数据集没有放在 oneflow-cambricon-models/ 下，可以手动指定位置，例如
+```
+python3 main.py /path/to/your/dataset
+```
+- 如果没有 imagenet 数据集，可以使用 `--dummy` 来生成随机数据作为训练数据。
+```
+python3 main.py -a resnet50 --dummy
+```
+- 其他常用选项有：`-b` 设置 batch size，`-p` 设置多少 iter 输出一次日志，`--lr` 设置学习率等。详细操作可以阅读[文档](resnet50-imagenet/README.md)
+
+---
 
 ### libai-gpt2
 
