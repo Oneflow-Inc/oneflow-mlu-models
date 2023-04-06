@@ -1,6 +1,6 @@
-## oneflow-cambricon-models
+# oneflow-cambricon-models
 
-### resnet50-imagenet
+## resnet50-imagenet
 
 在 MLU 370 上使用resnet50训练和推理imagenet，详细文档见[这里](resnet50-imagenet/README.md)。
 需要先将路径切换到 oneflow-cambricon-models/resnet50-imagenet/ 下。
@@ -55,11 +55,11 @@ python3 main.py -a resnet50 --dummy
 
 ---
 
-### libai-gpt2
+## libai-gpt2
 
 在 MLU 370 上使用 GPT2 微调以及推理 StableDiffusion 的咒语。
 
-#### 推理步骤如下
+#### 推理
 
 ```shell
 git clone --recursive https://github.com/Oneflow-Inc/oneflow-cambricon-models.git
@@ -89,7 +89,7 @@ pipeline_num_layers=12,
 """
 python3 -m oneflow.distributed.launch --nproc_per_node 4 projects/MagicPrompt/pipeline.py
 ```
-#### 微调步骤如下
+#### 训练微调
 
 训练只需要下载数据集 (`wget http://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/libai/magicprompt/magicprompt.zip`) 并且修改下`projects/MagicPrompt/configs/gpt2_training.py`第13到15行的路径就可以了。然后执行下面的命令进行单卡的训练：
 
