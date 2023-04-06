@@ -26,7 +26,7 @@ python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessi
 
 ### 推理
 
-推理只需要在训练命令的基础上加上 `-e` 选项即可
+推理只需要在训练命令的基础上加上 `-e` 选项即可，此时会在 imagenet 的验证集上进行推理。
 
 单卡推理
 ```shell
