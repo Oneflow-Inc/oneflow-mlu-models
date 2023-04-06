@@ -1,8 +1,9 @@
 # oneflow-cambricon-models
 
-## resnet50-imagenet
+## ResNet50
 
 在 MLU 370 上使用resnet50训练和推理imagenet，详细文档见[这里](resnet50-imagenet/README.md)。
+
 需要先将路径切换到 oneflow-cambricon-models/resnet50-imagenet/ 下。
 
 #### 数据集准备
