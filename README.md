@@ -7,7 +7,7 @@
 
 ### 数据集准备
 
-把 imagenet 数据集放在 oneflow-cambricon-models/ 下即可。
+需要 imagent 数据集，并且默认存放在 /ssd/dataset/ImageNet/extract 目录下，如果您的 ImageNet 数据集在其他路径中存放，请在脚本后面输入数据集路径来指定，详情见下方**其他选项**中描述。
 
 ### 训练
 
@@ -43,9 +43,9 @@ python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessi
 python3 main.py -a resnet50
 ```
 
-- 如果 imagenet 数据集没有放在 oneflow-cambricon-models/ 下，可以手动指定位置，例如
+- 如果 imagenet 数据集没有放在 /ssd/dataset/ImageNet/extract 下，可以手动指定位置，例如
 ```shell
-python3 main.py /path/to/your/dataset
+python3 main.py /path/to/your/dataset/extract
 ```
 - 如果没有 imagenet 数据集，可以使用 `--dummy` 来生成随机数据作为训练数据。
 ```shell
