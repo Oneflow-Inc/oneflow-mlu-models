@@ -2,16 +2,16 @@
 
 ### resnet50-imagenet
 
-在 MLU 370 上使用resnet50训练和推理imagenet，详细文档见[这里](resnet50-imagenet/README.md)。
+在 MLU 370 上使用 ResNet50 训练和推理 ImageNet，详细文档见[这里](resnet50-imagenet/README.md)。
 需要先将路径切换到 oneflow-cambricon-models/resnet50-imagenet/ 下。
 
 ### 数据集准备
 
-需要 imagent 数据集，并且默认存放在 /ssd/dataset/ImageNet/extract 目录下，如果您的 ImageNet 数据集在其他路径中存放，请在脚本后面输入数据集路径来指定，详情见下方**其他选项**中描述。
+需要 ImageNet 数据集，并且默认存放在 /ssd/dataset/ImageNet/extract 目录下，如果您的 ImageNet 数据集在其他路径中存放，请在脚本后面输入数据集路径来指定，详情见下方**其他选项**中描述。
 
 ### 训练
 
-训练默认使用 imagenet 数据集，和 ResNet18 网络。
+训练默认使用 ImageNet 数据集，和 ResNet50 网络。
 
 单卡训练
 ```shell
@@ -38,16 +38,16 @@ python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessi
 ```
 
 ### 其他选项
-- 如果需要更改网络，可以使用 `-a` 选项。例如要训练 ResNet50，则可以运行如下命令。可以支持 flowvision.models 中的网络。
+- 如果需要更改网络，可以使用 `-a` 选项。例如要训练 ResNet18，则可以运行如下命令。可以支持 flowvision.models 中的网络。
 ```shell
-python3 main.py -a resnet50
+python3 main.py -a resnet18
 ```
 
-- 如果 imagenet 数据集没有放在 /ssd/dataset/ImageNet/extract 下，可以手动指定位置，例如
+- 如果 ImageNet 数据集没有放在 /ssd/dataset/ImageNet/extract 下，可以手动指定位置，例如
 ```shell
 python3 main.py /path/to/your/dataset/extract
 ```
-- 如果没有 imagenet 数据集，可以使用 `--dummy` 来生成随机数据作为训练数据。
+- 如果没有 ImageNet 数据集，可以使用 `--dummy` 来生成随机数据作为训练数据。
 ```shell
 python3 main.py -a resnet50 --dummy
 ```
