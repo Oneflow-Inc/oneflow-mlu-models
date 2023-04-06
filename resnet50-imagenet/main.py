@@ -1,3 +1,5 @@
+# The code is modified from https://github.com/pytorch/examples/blob/main/imagenet/main.py
+
 import argparse
 import os
 import random
