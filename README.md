@@ -1,15 +1,16 @@
-## oneflow-cambricon-models
+# oneflow-cambricon-models
 
-### resnet50-imagenet
+## ResNet50
 
 在 MLU 370 上使用 ResNet50 训练和推理 ImageNet，详细文档见[这里](resnet50-imagenet/README.md)。
+
 需要先将路径切换到 oneflow-cambricon-models/resnet50-imagenet/ 下。
 
-### 数据集准备
+#### 数据集准备
 
 需要 ImageNet 数据集，并且默认存放在 /ssd/dataset/ImageNet/extract 目录下，如果您的 ImageNet 数据集在其他路径中存放，请在脚本后面输入数据集路径来指定，详情见下方**其他选项**中描述。
 
-### 训练
+#### 训练
 
 训练默认使用 ImageNet 数据集，和 ResNet50 网络。
 
@@ -24,9 +25,9 @@ python3 main.py
 python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessing-distributed
 ```
 
-### 推理
+#### 推理
 
-推理只需要在训练命令的基础上加上 `-e` 选项即可
+推理只需要在训练命令的基础上加上 `-e` 选项即可，此时会在 imagenet 的验证集上进行推理。
 
 单卡推理
 ```shell
@@ -39,6 +40,7 @@ python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessi
 
 ### 其他选项
 - 如果需要更改网络，可以使用 `-a` 选项。例如要训练 ResNet18，则可以运行如下命令。可以支持 flowvision.models 中的网络。
+
 ```shell
 python3 main.py -a resnet18
 ```
@@ -55,11 +57,11 @@ python3 main.py -a resnet50 --dummy
 
 ---
 
-### libai-gpt2
+## libai-gpt2
 
 在 MLU 370 上使用 GPT2 微调以及推理 StableDiffusion 的咒语。
 
-### 推理步骤如下
+#### 推理
 
 ```shell
 git clone --recursive https://github.com/Oneflow-Inc/oneflow-cambricon-models.git
@@ -89,7 +91,7 @@ pipeline_num_layers=12,
 """
 python3 -m oneflow.distributed.launch --nproc_per_node 4 projects/MagicPrompt/pipeline.py
 ```
-### 微调步骤如下
+#### 训练微调
 
 训练只需要下载数据集 (`wget http://oneflow-public.oss-cn-beijing.aliyuncs.com/datasets/libai/magicprompt/magicprompt.zip`) 并且修改下`projects/MagicPrompt/configs/gpt2_training.py`第13到15行的路径就可以了。然后执行下面的命令进行单卡的训练：
 
