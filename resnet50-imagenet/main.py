@@ -314,9 +314,10 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
     losses = AverageMeter('Loss', ':.4e')
     top1 = AverageMeter('Acc@1', ':6.2f')
     top5 = AverageMeter('Acc@5', ':6.2f')
+    samples = AverageMeter('Throughput', ':6.2f')
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, losses, top1, top5],
+        [batch_time, data_time, losses, top1, top5, samples],
         prefix="Epoch: [{}]".format(epoch))
 
     # switch to train mode
@@ -341,13 +342,16 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
         top1.update(acc1[0], images.size(0))
         top5.update(acc5[0], images.size(0))
 
+
         # compute gradient and do SGD step
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
         # measure elapsed time
-        batch_time.update(time.time() - end)
+        batch_time_value = time.time() - end
+        batch_time.update(batch_time_value)
+        samples.update(args.batch_size / batch_time_value)
         end = time.time()
 
         if i % args.print_freq == 0:
