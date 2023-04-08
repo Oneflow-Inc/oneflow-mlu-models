@@ -12,7 +12,7 @@
 
 #### OneFlow 对应代码修改
 
-由于 mlu 暂时不支持 stream_touch 算子，所以需要注释掉 `oneflow/python/oneflow/framework/distribute.py` 中的这两行[代码](https://github.com/Oneflow-Inc/oneflow-cambricon/blob/73870cbecc9caf0258ca38a01a13f9544176f2e4/python/oneflow/nn/parallel/distributed.py#L190-L191)。注释掉这两行代码不会影响精度正确性。
+由于 mlu 暂时不支持 stream_touch 算子，所以需要注释掉 `oneflow/python/oneflow/framework/distribute.py` 中的这三行[代码](https://github.com/Oneflow-Inc/oneflow-cambricon/blob/73870cbecc9caf0258ca38a01a13f9544176f2e4/python/oneflow/nn/parallel/distributed.py#L189-L191)。注释掉这两行代码不会影响精度正确性。
 
 ```python
 ...
@@ -26,8 +26,8 @@
                 n=1,
             )[0]
         )
-        buffers = list(module.buffers())
-        # 注释掉下面这两行代码
+        # 注释掉下面这三行代码
+        # buffers = list(module.buffers())
         # if len(buffers) > 0:
         #     flow._C.stream_touch(buffers)
         return output
