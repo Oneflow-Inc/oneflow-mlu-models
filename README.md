@@ -10,6 +10,30 @@
 
 需要 ImageNet 数据集，并且默认存放在 /ssd/dataset/ImageNet/extract 目录下，如果您的 ImageNet 数据集在其他路径中存放，请在脚本后面输入数据集路径来指定，详情见下方**其他选项**中描述。
 
+#### OneFlow 对应代码修改
+
+由于 mlu 暂时不支持 stream_touch 算子，所以需要注释掉 `oneflow/python/oneflow/framework/distribute.py` 中的这两行[代码](https://github.com/Oneflow-Inc/oneflow-cambricon/blob/73870cbecc9caf0258ca38a01a13f9544176f2e4/python/oneflow/nn/parallel/distributed.py#L190-L191)。注释掉这两行代码不会影响精度正确性。
+
+```python
+...
+    def post_forward_hook(module, input, output):
+        ddp_state_for_reversed_params = module._ddp_state_for_reversed_params
+        for state in ddp_state_for_reversed_params.values():
+            state[0], state[1] = False, False
+        output = ArgsTree(output).map_leaf(
+            lambda x: flow._C.select_top_n(
+                convert_to_tensor_tuple([x, *ddp_state_for_reversed_params.keys()]),
+                n=1,
+            )[0]
+        )
+        buffers = list(module.buffers())
+        # 注释掉下面这两行代码
+        # if len(buffers) > 0:
+        #     flow._C.stream_touch(buffers)
+        return output
+...
+```
+
 #### 训练
 
 训练默认使用 ImageNet 数据集，和 ResNet50 网络。
