@@ -62,7 +62,7 @@ python3 main.py -e
 python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessing-distributed -e
 ```
 
-### 其他选项
+#### 其他选项
 - 如果需要更改网络，可以使用 `-a` 选项。例如要训练 ResNet18，则可以运行如下命令。可以支持 flowvision.models 中的网络。
 
 ```shell
