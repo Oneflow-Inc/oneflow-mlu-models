@@ -475,7 +475,7 @@ def benchmark(val_loader, model, device, args):
     flops = AverageMeter('FLOPS(T/s)', ':6.2f')
 
     progress = ProgressMeter(
-        len(val_loader) + (args.distributed and (len(val_loader.sampler) * args.world_size < len(val_loader.dataset))),
+        iter_count,
         [batch_time, samples, flops],
         prefix='Benchmark: ')
 
