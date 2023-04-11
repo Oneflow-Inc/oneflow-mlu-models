@@ -150,22 +150,22 @@ def main_worker(gpu, ngpus_per_node, args):
         if args.benchmark:
             args.total_flops, args.total_params = get_model_FLOPs(model, (1, 3, 224, 224))
             # model.to(channels_last) has no effect on AdaptiveAvgPool2d, so insert permute manually
-            if args.channels_last and "resnet" in args.arch:
-                model.avgpool = oneflow.nn.Sequential([
-                    NHWC2NCHW(),
-                    oneflow.nn.AdaptiveAvgPool2d((1, 1)),
-                ])
+        if args.channels_last and "resnet" in args.arch:
+            model.avgpool = oneflow.nn.Sequential([
+                NHWC2NCHW(),
+                oneflow.nn.AdaptiveAvgPool2d((1, 1)),
+            ])
     else:
         print("=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch]()
         if args.benchmark:
             args.total_flops, args.total_params = get_model_FLOPs(model, (1, 3, 224, 224))
             # model.to(channels_last) has no effect on AdaptiveAvgPool2d, so insert permute manually
-            if args.channels_last and "resnet" in args.arch:
-                model.avgpool = oneflow.nn.Sequential(
-                    NHWC2NCHW(),
-                    oneflow.nn.AdaptiveAvgPool2d((1, 1)),
-                )
+        if args.channels_last and "resnet" in args.arch:
+            model.avgpool = oneflow.nn.Sequential(
+                NHWC2NCHW(),
+                oneflow.nn.AdaptiveAvgPool2d((1, 1)),
+            )
 
     if not oneflow.cuda.is_available() and not oneflow.backends.mps.is_available():
         pass
@@ -214,6 +214,8 @@ def main_worker(gpu, ngpus_per_node, args):
         device = oneflow.device("mlu")
     
     model = model.to(device)
+    if args.channels_last:
+        model = model.to(memory_format=oneflow.channels_last)
     
     if args.distributed:
         model = oneflow.nn.parallel.DistributedDataParallel(model)
@@ -353,6 +355,8 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
 
         # move data to the same device as model
         images = images.to(device)
+        if args.channels_last:
+            images = images.to(memory_format=oneflow.channels_last)
         target = target.to(device)
 
         # compute output
@@ -397,6 +401,8 @@ def validate(val_loader, model, criterion, device, args):
                     target = target.cuda(args.gpu, non_blocking=True)
 
                 images = images.to(device)
+                if args.channels_last:
+                    images = images.to(memory_format=oneflow.channels_last)
                 target = target.to(device)
 
                 # compute output
