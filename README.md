@@ -1,5 +1,14 @@
 # oneflow-cambricon-models
 
+## 下载代码并安装
+
+```shell
+git clone --recursive https://github.com/Oneflow-Inc/oneflow-cambricon-models.git
+cd oneflow-cambricon-models/libai
+pip install pybind11
+pip install -e .
+```
+
 ## ResNet50
 
 在 MLU 370 上使用 ResNet50 训练和推理 ImageNet，详细文档见[这里](resnet50-imagenet/README.md)。
@@ -86,13 +95,6 @@ python3 main.py -a resnet50 --dummy
 在 MLU 370 上使用 GPT2 微调以及推理 StableDiffusion 的咒语。
 
 #### 推理
-
-```shell
-git clone --recursive https://github.com/Oneflow-Inc/oneflow-cambricon-models.git
-cd oneflow-cambricon-models/libai
-pip install pybind11
-pip install -e .
-```
 
 libai的gpt2推理实现是在projects/MagicPrompt文件夹中，这个Magicprompt是我们自己用gpt2预训练后做推理的项目，用于将一个简单的句子转换成stable diffusion的咒语。接着把从 `https://oneflow-static.oss-cn-beijing.aliyuncs.com/oneflow-model.zip` 这里下载的模型解压到任意路径，并在 libai/ 下全局搜索`/data/home/magicprompt`将其替换为解压后的模型路径，我们就可以跑起来gpt2生成咒语的推理脚本了。
 
