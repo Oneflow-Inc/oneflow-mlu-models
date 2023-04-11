@@ -62,6 +62,18 @@ python3 main.py -e
 python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessing-distributed -e
 ```
 
+#### benchmark
+
+benchmark 模式下，模型会使用固定的数据只进行前向推理，该模式的目的是测试显卡的FLOPS。默认内存排布为 NCHW。
+```shell
+python3 main.py --benchmark
+```
+
+在 benchmark 模式开启的情况下，可以加入 `--channels-last` 选项来测试 NHWC 的性能。
+```shell
+python3 main.py --benchmark --channels-last
+```
+
 ### 其他选项
 - 如果需要更改网络，可以使用 `-a` 选项。例如要训练 ResNet18，则可以运行如下命令。可以支持 flowvision.models 中的网络。
 
