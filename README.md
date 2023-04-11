@@ -78,12 +78,11 @@ benchmark 模式下，模型会使用固定的数据只进行前向推理，该�
 python3 main.py --benchmark
 ```
 
-在 benchmark 模式开启的情况下，可以加入 `--channels-last` 选项来测试 NHWC 的性能。
-```shell
-python3 main.py --benchmark --channels-last
-```
-
 #### 其他选项
+- 如果需要在训练、推理或者 benchemark 时使用 NHWC 布局，可以使用 `--channels-last` 选项开启。
+```shell
+python3 main.py --channels-last
+```
 - 如果需要更改网络，可以使用 `-a` 选项。例如要训练 ResNet18，则可以运行如下命令。可以支持 flowvision.models 中的网络。
 
 ```shell
