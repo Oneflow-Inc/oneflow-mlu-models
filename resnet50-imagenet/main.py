@@ -195,6 +195,7 @@ def main_worker(gpu, ngpus_per_node, args):
         device = oneflow.device("mlu")
     
     model = model.to(device)
+    model.to(memory_format=oneflow.channels_last)
     
     if args.distributed:
         model = oneflow.nn.parallel.DistributedDataParallel(model)
@@ -329,7 +330,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
         data_time.update(time.time() - end)
 
         # move data to the same device as model
-        images = images.to(device)
+        images = images.to(device).to(memory_format=oneflow.channels_last)
         target = target.to(device)
 
         # compute output
@@ -373,7 +374,7 @@ def validate(val_loader, model, criterion, device, args):
                 if oneflow.cuda.is_available():
                     target = target.cuda(args.gpu, non_blocking=True)
 
-                images = images.to(device)
+                images = images.to(device).to(memory_format=oneflow.channels_last)
                 target = target.to(device)
 
                 # compute output
