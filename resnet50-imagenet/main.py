@@ -79,6 +79,10 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'fastest way to use Pyoneflow for either single node or '
                          'multi node data parallel training')
 parser.add_argument('--dummy', action='store_true', help="use fake data to benchmark")
+parser.add_argument('--benchmark', action='store_true',
+                    help="benchmark by inferencing backbone with constant input")
+parser.add_argument('--channels-last', action='store_true',
+                    help="Use NHWC memory format instead of NCHW")
 
 best_acc1 = 0
 
@@ -143,13 +147,16 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.pretrained:
         print("=> using pre-trained model '{}'".format(args.arch))
         model = models.__dict__[args.arch](pretrained=True)
+        if args.benchmark:
+            args.total_flops, args.total_params = get_model_FLOPs(model, (1, 3, 224, 224))
     else:
         print("=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch]()
+        if args.benchmark:
+            args.total_flops, args.total_params = get_model_FLOPs(model, (1, 3, 224, 224))
 
     if not oneflow.cuda.is_available() and not oneflow.backends.mps.is_available():
         pass
-        # print('using CPU, this will be slow')
     elif args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
         # should always set the single device scope, otherwise,
@@ -195,7 +202,8 @@ def main_worker(gpu, ngpus_per_node, args):
         device = oneflow.device("mlu")
     
     model = model.to(device)
-    model.to(memory_format=oneflow.channels_last)
+    if args.channels_last:
+        model = model.to(memory_format=oneflow.channels_last)
     
     if args.distributed:
         model = oneflow.nn.parallel.DistributedDataParallel(model)
@@ -281,6 +289,10 @@ def main_worker(gpu, ngpus_per_node, args):
         validate(val_loader, model, criterion, device, args)
         return
 
+    if args.benchmark:
+        benchmark(val_loader, model, device, args)
+        return
+
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
@@ -330,7 +342,9 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
         data_time.update(time.time() - end)
 
         # move data to the same device as model
-        images = images.to(device).to(memory_format=oneflow.channels_last)
+        images = images.to(device)
+        if args.channels_last:
+            images = images.to(memory_format=oneflow.channels_last)
         target = target.to(device)
 
         # compute output
@@ -374,7 +388,9 @@ def validate(val_loader, model, criterion, device, args):
                 if oneflow.cuda.is_available():
                     target = target.cuda(args.gpu, non_blocking=True)
 
-                images = images.to(device).to(memory_format=oneflow.channels_last)
+                images = images.to(device)
+                if args.channels_last:
+                    images = images.to(memory_format=oneflow.channels_last)
                 target = target.to(device)
 
                 # compute output
@@ -388,7 +404,9 @@ def validate(val_loader, model, criterion, device, args):
                 top5.update(acc5[0], images.size(0))
 
                 # measure elapsed time
-                batch_time.update(time.time() - end)
+                batch_time_value = time.time() - end
+                batch_time.update(batch_time_value)
+                samples.update(args.batch_size / batch_time_value)
                 end = time.time()
 
                 if i % args.print_freq == 0:
@@ -398,9 +416,12 @@ def validate(val_loader, model, criterion, device, args):
     losses = AverageMeter('Loss', ':.4e', Summary.NONE)
     top1 = AverageMeter('Acc@1', ':6.2f', Summary.AVERAGE)
     top5 = AverageMeter('Acc@5', ':6.2f', Summary.AVERAGE)
+    samples = AverageMeter('Throughput', ':6.2f')
+
+    progress_list = [batch_time, losses, top1, top5, samples]
     progress = ProgressMeter(
         len(val_loader) + (args.distributed and (len(val_loader.sampler) * args.world_size < len(val_loader.dataset))),
-        [batch_time, losses, top1, top5],
+        [batch_time, losses, top1, top5, samples],
         prefix='Test: ')
 
     # switch to evaluate mode
@@ -424,6 +445,41 @@ def validate(val_loader, model, criterion, device, args):
     progress.display_summary()
 
     return top1.avg
+
+def benchmark(val_loader, model, device, args):
+    images = oneflow.randn(args.batch_size, 3, 224, 224).to(device)
+    if args.channels_last:
+        images = images.to(memory_format=oneflow.channels_last)
+    iter_count = 100
+
+    def run_benchmark(loader, base_progress=0):
+        with oneflow.no_grad():
+            end = time.time()
+            for i in range(iter_count):
+                output = model(images)
+
+        oneflow._oneflow_internal.eager.Sync()
+        batch_time_value = time.time() - end
+        batch_time.update(batch_time_value)
+        samples.update(iter_count * args.batch_size / batch_time_value)
+        flops.update(iter_count * args.batch_size * args.total_flops / 1e12 / batch_time_value)
+
+    batch_time = AverageMeter('Time', ':6.3f', Summary.NONE)
+    samples = AverageMeter('Throughput', ':6.2f')
+    flops = AverageMeter('FLOPS(T/s)', ':6.2f')
+
+    progress = ProgressMeter(
+        iter_count,
+        [batch_time, samples, flops],
+        prefix='Benchmark: ')
+
+    # switch to evaluate mode
+    model.eval()
+    if args.channels_last:
+        model.to(memory_format=oneflow.channels_last)
+
+    run_benchmark(val_loader)
+    progress.display_summary()
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth.tar'):
@@ -526,6 +582,25 @@ def accuracy(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
+
+def get_model_FLOPs(model, input_size):
+    try:
+        from flowflops import get_model_complexity_info
+        from flowflops.utils import flops_to_string, params_to_string
+        from flowflops.flow_engine import reset_flops_count
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError("Please install `flowflops` by `pip install flowflops -i https://pypi.tuna.tsinghua.edu.cn/simple`")
+
+    total_flops, total_params = get_model_complexity_info(
+        model, input_size,
+        as_strings=False,
+        print_per_layer_stat=False,
+        mode="eager",
+    )
+
+    # remove hooks in module
+    reset_flops_count(model)
+    return total_flops * 2, total_params
 
 
 if __name__ == '__main__':
