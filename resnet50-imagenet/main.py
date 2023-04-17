@@ -149,23 +149,11 @@ def main_worker(gpu, ngpus_per_node, args):
         model = models.__dict__[args.arch](pretrained=True)
         if args.benchmark:
             args.total_flops, args.total_params = get_model_FLOPs(model, (1, 3, 224, 224))
-            # model.to(channels_last) has no effect on AdaptiveAvgPool2d, so insert permute manually
-        if args.channels_last and "resnet" in args.arch:
-            model.avgpool = oneflow.nn.Sequential([
-                NHWC2NCHW(),
-                oneflow.nn.AdaptiveAvgPool2d((1, 1)),
-            ])
     else:
         print("=> creating model '{}'".format(args.arch))
         model = models.__dict__[args.arch]()
         if args.benchmark:
             args.total_flops, args.total_params = get_model_FLOPs(model, (1, 3, 224, 224))
-            # model.to(channels_last) has no effect on AdaptiveAvgPool2d, so insert permute manually
-        if args.channels_last and "resnet" in args.arch:
-            model.avgpool = oneflow.nn.Sequential(
-                NHWC2NCHW(),
-                oneflow.nn.AdaptiveAvgPool2d((1, 1)),
-            )
 
     if not oneflow.cuda.is_available() and not oneflow.backends.mps.is_available():
         pass
@@ -614,9 +602,6 @@ def get_model_FLOPs(model, input_size):
     reset_flops_count(model)
     return total_flops * 2, total_params
 
-class NHWC2NCHW(oneflow.nn.Module):
-    def forward(self, x):
-        return x.permute(0, 3, 1, 2)
 
 if __name__ == '__main__':
     main()
