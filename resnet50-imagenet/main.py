@@ -461,11 +461,8 @@ def benchmark(val_loader, model, device, args):
         def build(self, input):
             return self.model(input)
     resnet50_graph = ResNet50Graph()
-    # warmup
-    _ = resnet50_graph(images)
-    _numpy = _.cpu().numpy()
 
-    def run_benchmark(resnet50_graph):
+    def run_benchmark(resnet50_graph, loader, base_progress=0):
         with oneflow.no_grad():
             # warmup 5 iters
             for i in range(5):
@@ -476,7 +473,7 @@ def benchmark(val_loader, model, device, args):
             for i in range(iter_count):
                 output = resnet50_graph(images)
 
-        _numpy = output.cpu().numpy()
+        oneflow._oneflow_internal.eager.Sync()
         batch_time_value = time.time() - end
         batch_time.update(batch_time_value)
         samples.update(iter_count * args.batch_size / batch_time_value)
@@ -497,7 +494,7 @@ def benchmark(val_loader, model, device, args):
         model.to(memory_format=oneflow.channels_last)
 
     
-    run_benchmark(resnet50_graph)
+    run_benchmark(resnet50_graph, val_loader)
     progress.display_summary()
 
 
