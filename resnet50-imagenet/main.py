@@ -454,19 +454,22 @@ def benchmark(val_loader, model, device, args):
     if args.channels_last:
         images = images.to(memory_format=oneflow.channels_last)
     iter_count = 100
-    class ResNet50Graph(nn.Graph):
-        def __init__(self):
-            super().__init__()
-            self.model = model
-        def build(self, input):
-            return self.model(input)
-    resnet50_graph = ResNet50Graph()
 
-    def run_benchmark(resnet50_graph, loader, base_progress=0):
+    def run_benchmark(loader, base_progress=0):
+        class ResNet50Graph(nn.Graph):
+            def __init__(self):
+                super().__init__()
+                self.model = model
+
+            def build(self, input):
+                return self.model(input)
+
+        resnet50_graph = ResNet50Graph()
+    
         with oneflow.no_grad():
             # warmup 5 iters
             for i in range(5):
-                output = model(images)
+                output = resnet50_graph(images)
             output.numpy()
 
             end = time.time()
@@ -493,8 +496,7 @@ def benchmark(val_loader, model, device, args):
     if args.channels_last:
         model.to(memory_format=oneflow.channels_last)
 
-    
-    run_benchmark(resnet50_graph, val_loader)
+    run_benchmark(val_loader)
     progress.display_summary()
 
 
