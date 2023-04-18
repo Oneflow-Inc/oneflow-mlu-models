@@ -454,6 +454,11 @@ def benchmark(val_loader, model, device, args):
 
     def run_benchmark(loader, base_progress=0):
         with oneflow.no_grad():
+            # warmup 5 iters
+            for i in range(5):
+                output = model(images)
+            output.numpy()
+
             end = time.time()
             for i in range(iter_count):
                 output = model(images)
