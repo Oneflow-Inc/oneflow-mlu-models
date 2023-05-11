@@ -1,10 +1,10 @@
-# oneflow-cambricon-models
+# oneflow-mlu-models
 
 ## 下载代码并安装
 
 ```shell
-git clone --recursive https://github.com/Oneflow-Inc/oneflow-cambricon-models.git
-cd oneflow-cambricon-models/libai
+git clone --recursive https://github.com/Oneflow-Inc/oneflow-mlu-models.git
+cd oneflow-mlu-models/libai
 pip install pybind11
 pip install -e .
 ```
@@ -13,7 +13,7 @@ pip install -e .
 
 在 MLU 370 上使用 ResNet50 训练和推理 ImageNet，详细文档见[这里](resnet50-imagenet/README.md)。
 
-需要先将路径切换到 oneflow-cambricon-models/resnet50-imagenet/ 下。
+需要先将路径切换到 oneflow-mlu-models/resnet50-imagenet/ 下。
 
 #### 数据集准备
 
@@ -34,15 +34,15 @@ python3 main.py
 python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessing-distributed
 ```
 
-#### 推理
+#### 评估
 
-推理只需要在训练命令的基础上加上 `-e` 选项即可，此时会在 imagenet 的验证集上进行推理。
+评估只需要在训练命令的基础上加上 `-e` 选项即可，此时会在 imagenet 的集上对模型进行评估。
 
-单卡推理
+单卡评估
 ```shell
 python3 main.py -e
 ```
-多卡 DDP 推理
+多卡 DDP 评估
 ```shell
 python3 -m oneflow.distributed.launch --nproc_per_node 4 main.py --multiprocessing-distributed -e
 ```
