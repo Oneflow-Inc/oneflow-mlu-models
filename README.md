@@ -13,13 +13,13 @@ pip install -e .
 
 ## 模型列表
 
-* <a href="ResNet50">ResNet50</a>：在 MLU 370 上训练和评估ResNet50模型。
+* <a href="#resnet50">ResNet50</a>：在 MLU 370 上训练和评估ResNet50模型。
 
-* <a href="Libai-GPT2">Libai-GPT2</a> ：在 MLU 370 上使用 GPT2 微调以及推理 StableDiffusion 的咒语。
+* <a href="#libai_gpt2">Libai-GPT2</a> ：在 MLU 370 上使用 GPT2 微调以及推理 StableDiffusion 的咒语。
 
   
 
-## <a id="ResNet50">ResNet50</a>
+## <a id="resnet50">ResNet50</a>
 
 切换路径到 oneflow-mlu-models/resnet50/。
 
@@ -87,7 +87,7 @@ python3 main.py --channels-last --benchmark
 
 ---
 
-## <a id="Libai-GPT2">Libai-GPT2</a>
+## <a id="libai_gpt2">Libai-GPT2</a>
 
 切换路径到 oneflow-mlu-models/libai/。
 
