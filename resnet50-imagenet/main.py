@@ -6,6 +6,7 @@ import random
 import shutil
 import time
 import warnings
+import logging
 from enum import Enum
 os.environ["ONEFLOW_MLIR_ENABLE_ROUND_TRIP"] = "1"
 os.environ["ONEFLOW_MLIR_FUSE_NORMALIZATION_OPS"] = "1"
@@ -85,6 +86,7 @@ parser.add_argument('--benchmark', action='store_true',
                     help="benchmark by inferencing backbone with constant input")
 parser.add_argument('--channels-last', action='store_true',
                     help="Use NHWC memory format instead of NCHW")
+parser.add_argument('--logfile', default=None, help="the filepath to save log")
 
 best_acc1 = 0
 
@@ -242,6 +244,9 @@ def main_worker(gpu, ngpus_per_node, args):
         else:
             print("=> no checkpoint found at '{}'".format(args.resume))
 
+    args.logger = get_logger(args.logfile, args.rank)
+    args.logger.info("options: ")
+    args.logger.info(vars(args))
 
     # Data loading code
     if args.dummy:
@@ -334,6 +339,7 @@ def train(train_loader, model, criterion, optimizer, epoch, device, args):
     progress = ProgressMeter(
         len(train_loader),
         [batch_time, data_time, losses, top1, top5, samples],
+        args.logger,
         prefix="Epoch: [{}]".format(epoch))
 
     # switch to train mode
@@ -425,6 +431,7 @@ def validate(val_loader, model, criterion, device, args):
     progress = ProgressMeter(
         len(val_loader) + (args.distributed and (len(val_loader.sampler) * args.world_size < len(val_loader.dataset))),
         [batch_time, losses, top1, top5, samples],
+        args.logger,
         prefix='Test: ')
 
     # switch to evaluate mode
@@ -489,6 +496,7 @@ def benchmark(val_loader, model, device, args):
     progress = ProgressMeter(
         iter_count,
         [batch_time, samples, flops],
+        args.logger,
         prefix='Benchmark: ')
 
     # switch to evaluate mode
@@ -565,20 +573,21 @@ class AverageMeter(object):
 
 
 class ProgressMeter(object):
-    def __init__(self, num_batches, meters, prefix=""):
+    def __init__(self, num_batches, meters, logger, prefix=""):
         self.batch_fmtstr = self._get_batch_fmtstr(num_batches)
         self.meters = meters
         self.prefix = prefix
+        self.logger = logger
 
     def display(self, batch):
         entries = [self.prefix + self.batch_fmtstr.format(batch)]
         entries += [str(meter) for meter in self.meters]
-        print('\t'.join(entries))
+        self.logger.info('\t'.join(entries))
         
     def display_summary(self):
         entries = [" *"]
         entries += [meter.summary() for meter in self.meters]
-        print(' '.join(entries))
+        self.logger.info(' '.join(entries))
 
     def _get_batch_fmtstr(self, num_batches):
         num_digits = len(str(num_batches // 1))
@@ -620,6 +629,29 @@ def get_model_FLOPs(model, input_size):
     reset_flops_count(model)
     return total_flops * 2, total_params
 
+def get_logger(filename, rank, verbosity=1, name=None):
+    if rank > 0:
+        return logging.getLogger(None)
+
+    if filename is None:
+        timestr = time.strftime("%Y%m%d_%H%M%S")
+        filename = f"./imagenet_log_{timestr}.txt"
+
+    level_dict = {0: logging.DEBUG, 1: logging.INFO, 2: logging.WARNING}
+    formatter = logging.Formatter(
+        "[%(asctime)s][%(filename)s][line:%(lineno)d][%(levelname)s] %(message)s"
+    )
+    logger = logging.getLogger(name)
+    logger.setLevel(level_dict[verbosity])
+
+    fh = logging.FileHandler(filename, "w")
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+    sh = logging.StreamHandler()
+    logger.addHandler(sh)
+
+    return logger
 
 if __name__ == '__main__':
     main()
