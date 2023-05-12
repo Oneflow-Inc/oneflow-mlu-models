@@ -125,9 +125,9 @@ libai的gpt2推理实现是在projects/MagicPrompt文件夹中，这个Magicprom
 
 - 单卡训练
 
-```shell
-bash tools/train.sh tools/train_net.py projects/MagicPrompt/configs/gpt2_training.py 1
-```
+  ```shell
+  bash tools/train.sh tools/train_net.py projects/MagicPrompt/configs/gpt2_training.py 1
+  ```
 
 - 4卡数据并行训练
 
