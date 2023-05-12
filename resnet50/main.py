@@ -24,6 +24,7 @@ import flowvision.models as models
 import flowvision.transforms as transforms
 from oneflow.optim.lr_scheduler import StepLR
 from oneflow.utils.data import Subset
+import oneflow_mlu
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
